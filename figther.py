@@ -3,8 +3,15 @@ import pygame
 
 class Fighter():
     # Constructor
-    def __init__(self, x, y):
+    def __init__(self, x, y, data, idle_sprite, idle_steps):
+        self.size = data[0]
+        self.image_scale = data[2]
+        self.offset = data[3]
         self.flip = False
+        self.animation_list = self.load_images(idle_sprite, idle_steps)
+        self.action = 0 # 0 -> idle ; 1 -> run ; 2 -> jump ; 3 -> attack1 ; 4 -> attack2 ; 5 -> hit ; 6 -> death
+        self.frame_index = 0
+        self.image = self.animation_list[self.action][self.frame_index]
         self.rect = pygame.Rect((x, y, 50, 150))
         self.velocity_y = 0
         self.jump = False
@@ -12,11 +19,20 @@ class Fighter():
         self.attack_type = 0
         self.health = 100
         
-    '''    
-    def load_images(self, sprite_sheet, animation_steps):
-        for _ in range(animation):
-    '''    
- 
+
+    def load_images(self, idle_sprite, idle_steps):
+        # ectrating all the images from on sprite animation
+        animation_list = []
+        temp_img_list = []
+        for x in range(idle_steps):
+            # 10316, to iterate on each single sprite
+            temp_img = idle_sprite.subsurface(x * self.size, 0, self.size, self.size)
+            temp_img_list.append(pygame.transform.scale(temp_img, (self.size * self.image_scale, self.size * self.image_scale)))
+        animation_list.append(temp_img_list)
+        # print(animation_list)
+        return animation_list
+
+
         
     # Movement handler
     def move(self, screen_width, screen_height, floor_height, surface, target):
@@ -99,4 +115,6 @@ class Fighter():
         
     # Draw figther as rectangle
     def drawFigther(self, surface):
-        pygame.draw.rect(surface, (255, 0, 250), self.rect)
+        img = pygame.transform.flip(self.image, self.flip, False)
+        # pygame.draw.rect(surface, (255, 0, 250), self.rect)
+        surface.blit(img, (self.rect.x - (self.offset[0] * self.image_scale), self.rect.y - (self.offset[1] * self.image_scale)))

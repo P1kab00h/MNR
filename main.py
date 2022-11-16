@@ -31,6 +31,20 @@ yellow = (255, 255, 0)
 blue = (0, 0, 255)
 white = (255, 255, 255)
 
+# Fighters variables
+kenji_attack1_size = 200
+kenji_idle_size = 200
+kenji_scale = 2
+kenji_offset = [89, 53]
+kenji_data = [kenji_attack1_size, kenji_idle_size, kenji_scale, kenji_offset]
+
+samuraiMack_attack1_size = 200
+samuraiMack_idle_size = 200
+samuraiMack_scale = 2
+samuraiMack_offset = [85, 47]
+samuraiMack_data = [samuraiMack_attack1_size, samuraiMack_idle_size, samuraiMack_scale, samuraiMack_offset]
+
+
 # Load image BackGround to the size of screen: Surface
 background_img = pygame.image.load(
     'assets/images/background/background.png').convert_alpha()
@@ -68,8 +82,10 @@ def drw_life_bar(health, x, y):
 
 
 # Instances of Figther()
-figther_1 = Fighter(200, bgd_floor, samuraiMack_idle_sprite, samuraiMack_idle_steps)
-figther_2 = Fighter(500, bgd_floor, kenji_idle_sprite, kenji_idle_steps)
+figther_1 = Fighter(200, bgd_floor, samuraiMack_data, samuraiMack_idle_sprite, samuraiMack_idle_steps)
+#figther_1 = Fighter(200, bgd_floor)
+figther_2 = Fighter(500, bgd_floor, kenji_data, kenji_idle_sprite, kenji_idle_steps)
+#figther_2 = Fighter(500, bgd_floor)
 
 # Game loop
 run = True
