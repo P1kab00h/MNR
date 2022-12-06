@@ -19,7 +19,10 @@ class Fighter():
         self.jump = False
         self.attacking = False
         self.attack_type = 0
-        self.health = 100
+        self.cooldown_attack = 0
+        self.hit = False
+        self.health = 10
+        self.alive = True
         
 
     def load_images(self, sprite_sheet, sprite_steps):
@@ -47,7 +50,7 @@ class Fighter():
         dy = 0
         # reset self.runing => go back to idle sprite, self.action = 3
         self.runing = False
-        self.action = 3
+        self.attack_type = 0
 
         # listen to key press
         key = pygame.key.get_pressed()
@@ -59,16 +62,13 @@ class Fighter():
             if key[pygame.K_q]:
                 dx = -SPEED
                 self.runing = True
-                self.action = 5
                 # rigth (x axis)
             if key[pygame.K_d]:
                 dx = +SPEED
                 self.runing = True
-                self.action = 5
                 # jump up / down gravity (y axis)
             if key[pygame.K_z] and self.jump == False:
                 self.velocity_y = -30
-                self.action = 4
                 self.jump = True
                 # attacks
             if key[pygame.K_v] or key[pygame.K_b]:
@@ -77,10 +77,11 @@ class Fighter():
                 # Now get the precise attack being used
                 if key[pygame.K_v]:
                     self.attack_type = 1
-                    self.action = 0
+                    self.attacking = True
                 if key[pygame.K_b]:
                     self.attack_type = 2
-                    self.action = 1
+                    self.attacking = True
+
 
         # apply gravity 
         self.velocity_y += GRAVITY
@@ -108,13 +109,35 @@ class Fighter():
         else:
             # if player one go over player two position
             self.flip = True
-            
+        
+        # 
+        if self.cooldown_attack > 0:
+            self.cooldown_attack -= 1
+        
         # update player position
         self.rect.x += dx
         self.rect.y += dy
 
     # Dealing with sprites updates
     def update_sprite(self):
+        # Check the player action's
+        if self.health <= 0:
+            self.health = 0
+            self.alive = False
+            self.update_action(2) # death
+        elif self.hit == True:
+            self.update_action(6) # Hit
+        if self.attacking == True:
+            if self.attack_type == 1:
+                self.update_action(0) # attack 1
+            elif self.attack_type == 2:
+                self.update_action(1) # attack 2
+        elif self.jump == True:
+            self.update_action(4) # jump
+        elif self.runing == True:
+            self.update_action(5) # runing
+        else:
+            self.update_action(3) # idle
         # create a cooldown value in order to change sprite each 100 ms
         animation_cooldown = 100
         # to 'animate' the Figther we gonna need to go thru the self.frame_index, doing so will change the self.image for each new index reached
@@ -125,24 +148,47 @@ class Fighter():
             self.update_sprite_time = pygame.time.get_ticks()
         # Check if the sprite array has reach the end, if so go back to the beginning
         if self.frame_index >= len(self.animation_list[self.action]):
-            self.frame_index = 0
-
+            if self.alive == False:
+                self.frame_index = len(self.animation_list[self.action]) - 1
+            else:
+                self.frame_index = 0
+            # check if an attack was (fully) executed
+            if self.action == 0 or self.action == 1:
+                self.attacking = False # avoid the infinit attack
+                self.cooldown_attack = 20
+            # check if hit was taken
+            if self.action == 6:
+                self.hit = False
+                # if the opponent was in a middle of an attack ==> the parry (attack stop)
+                self.attacking = False
+                self.cooldown_attack = 20
 
     # Attack Method
     def attack(self, surface, target):
-        self.attacking = True
-        # ==> self.rect.centerx - (2 * self.rect.width * self.flip)
-        # Help determine wich side should be attacked depending on self.flip
-        # If True then draw the rectangle on the left side of the player
-        attack_rect = pygame.Rect(self.rect.centerx - (2 * self.rect.width * self.flip), self.rect.y, 2 * self.rect.width, self.rect.height)
-        # check for collision between attack and the other player
-        if attack_rect.colliderect(target.rect):
-            print("ouchy Baby")
-            target.health -= 10
-            print(target.health)
-        pygame.draw.rect(surface, (255, 50, 0), attack_rect)
-        self.attacking = False
-        
+        if self.cooldown_attack == 0:
+            self.attacking = True
+            # ==> self.rect.centerx - (2 * self.rect.width * self.flip)
+            # Help determine wich side should be attacked depending on self.flip
+            # If True then draw the rectangle on the left side of the player
+            attack_rect = pygame.Rect(self.rect.centerx - (2 * self.rect.width * self.flip), self.rect.y, 2 * self.rect.width, self.rect.height)
+            # check for collision between attack and the other player
+            if attack_rect.colliderect(target.rect):
+                print("ouchy Baby")
+                target.health -= 10
+                target.hit = True
+                print(target.health)
+            pygame.draw.rect(surface, (255, 50, 0), attack_rect)
+            self.attacking = False
+
+    # Handle the out of range animation behaviour
+    def update_action(self, new_action):
+        # check if the new action is diff then the previous
+        if new_action != self.action:
+            self.action = new_action    
+            # Then update the animation (reset the frame index)
+            self.frame_index = 0
+            self.update_sprite_time = pygame.time.get_ticks()
+
     # Draw figther as rectangle(old), now draw the figther and check if he is facing the rigth side
     def drawFigther(self, surface):
         img = pygame.transform.flip(self.image, self.flip, False)
