@@ -31,6 +31,10 @@ yellow = (255, 255, 0)
 blue = (0, 0, 255)
 white = (255, 255, 255)
 
+# Game variables
+start_countdown = 0 #3
+last_countdown_update = pygame.time.get_ticks()
+
 # Fighters variables
 kenji_size = 200
 kenji_scale = 2
@@ -70,6 +74,20 @@ samuraiMack_full_sprites_steps = [6, 6, 6, 8, 2, 8, 4]
 #samuraiMack_attack1_steps = 6
 #samuraiMack_run_steps = 8
 
+#Define fount
+countdown_font = pygame.font.Font("assets/fonts/retro_computer_personal_use.ttf", 100)
+scores_font = pygame.font.Font("assets/fonts/retro_computer_personal_use.ttf", 20)
+victory_font = pygame.font.Font("assets/fonts/SquaredanceFontV1-Regular.ttf", 120)
+score = [0, 0] # [player1, player2]
+round_finished = False
+round_finished_coutdown = 2000
+
+# Draw text display
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x, y))
+
+
 # Draw background function,
 # Scale the image on the 'screen' size
 # origin => top left corner
@@ -87,14 +105,13 @@ def drw_life_bar(health, x, y):
 
 
 # Instances of Figther()
-figther_1 = Fighter(200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
+figther_1 = Fighter(1, 200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
 
 # figther_2 = Fighter(500, bgd_floor, True, kenji_data, kenji_full_sprite, kenji_full_sprites_steps)
-figther_2 = Fighter(500, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
+figther_2 = Fighter(2, 800, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
 
 # Game loop
 run = True
-
 while run:
     # handle the framerate
     clock.tick(fps)
@@ -103,15 +120,50 @@ while run:
     # Draw Health Bars
     drw_life_bar(figther_1.health, 20, 20)
     drw_life_bar(figther_2.health, 580, 20)
-    # manage figthers movement
-    figther_1.move(win_x, win_y, floor_height, screen, figther_2)
-    figther_2.move(win_x, win_y, floor_height, screen, figther_1)
+    draw_text("Player One :" + " " + str(score[0]), scores_font, yellow, 20, 60)
+    draw_text("Player Two :" + " " + str(score[1]), scores_font, blue, 580, 60)
+    # update the start countdown
+    if start_countdown <= 0:
+        # manage figthers movement
+        figther_1.move(win_x, win_y, floor_height, screen, figther_2, round_finished)
+        figther_2.move(win_x, win_y, floor_height, screen, figther_1, round_finished)
+    else :
+        # count timer display
+        draw_text(str(start_countdown), countdown_font, red, win_x/2 , win_y/3)
+        # Update the start countdown, we use the last_countdown_update in order to check if the last ticks was for one seconds or more
+        if pygame.time.get_ticks() - last_countdown_update >= 1000:
+            start_countdown -= 1
+            last_countdown_update = pygame.time.get_ticks()
+            
 
     figther_1.update_sprite()
     figther_2.update_sprite()
     # Draw Figthers
     figther_1.drawFigther(screen)
     figther_2.drawFigther(screen)
+    
+    # Score and victory display
+    if round_finished == False :
+        if figther_1.alive == False :
+            score[1] += 1
+            round_finished = True
+            round_over_time = pygame.time.get_ticks()
+        elif figther_2.alive == False :
+            score[0] += 1
+            round_finished = True
+            round_over_time = pygame.time.get_ticks()
+    else :
+        if figther_1.alive == False :
+            draw_text("Fighter 2 Win", victory_font, blue, win_x - 920, win_y/3)
+        elif figther_2.alive == False :
+            draw_text("Fighter 1 Win", victory_font, yellow, win_x - 920, win_y/3)
+        if pygame.time.get_ticks() - round_over_time > round_finished_coutdown:
+            round_finished = False
+            start_countdown = 3
+            # Reset instances of Figther()
+            figther_1 = Fighter(1, 200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
+            # figther_2 = Fighter(500, bgd_floor, True, kenji_data, kenji_full_sprite, kenji_full_sprites_steps)
+            figther_2 = Fighter(2, 800, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
     
     
     # Add Title

@@ -3,7 +3,8 @@ import pygame
 
 class Fighter():
     # Constructor
-    def __init__(self, x, y, flip, data, sprite_sheet, sprite_steps):
+    def __init__(self, player, x, y, flip, data, sprite_sheet, sprite_steps):
+        self.player = player
         self.size = data[0]
         self.image_scale = data[1]
         self.offset = data[2]
@@ -43,7 +44,7 @@ class Fighter():
 
         
     # Movement handler
-    def move(self, screen_width, screen_height, floor_height, surface, target):
+    def move(self, screen_width, screen_height, floor_height, surface, target, round_finished):
         SPEED = 10
         GRAVITY = 2
         dx = 0
@@ -55,33 +56,60 @@ class Fighter():
         # listen to key press
         key = pygame.key.get_pressed()
 
-        # All movement bellow is avaible if not attacking
-        if self.attacking == False:
-            # movement
-                # left (x axis)
-            if key[pygame.K_q]:
-                dx = -SPEED
-                self.runing = True
-                # rigth (x axis)
-            if key[pygame.K_d]:
-                dx = +SPEED
-                self.runing = True
-                # jump up / down gravity (y axis)
-            if key[pygame.K_z] and self.jump == False:
-                self.velocity_y = -30
-                self.jump = True
-                # attacks
-            if key[pygame.K_v] or key[pygame.K_b]:
-                
-                self.attack(surface, target)
-                # Now get the precise attack being used
-                if key[pygame.K_v]:
-                    self.attack_type = 1
-                    self.attacking = True
-                if key[pygame.K_b]:
-                    self.attack_type = 2
-                    self.attacking = True
-
+        # All movement bellow is avaible if not attacking, and still alive, and the round is not finished
+        if self.attacking == False and self.alive == True and round_finished == False :
+            # Player 1 controls
+            if self.player == 1 :
+                # movement
+                    # left (x axis)
+                if key[pygame.K_q]:
+                    dx = -SPEED
+                    self.runing = True
+                    # rigth (x axis)
+                if key[pygame.K_d]:
+                    dx = +SPEED
+                    self.runing = True
+                    # jump up / down gravity (y axis)
+                if key[pygame.K_z] and self.jump == False:
+                    self.velocity_y = -30
+                    self.jump = True
+                    # attacks
+                if key[pygame.K_v] or key[pygame.K_b]:
+                    
+                    self.attack(surface, target)
+                    # Now get the precise attack being used
+                    if key[pygame.K_v]:
+                        self.attack_type = 1
+                        self.attacking = True
+                    if key[pygame.K_b]:
+                        self.attack_type = 2
+                        self.attacking = True
+            # PLayer2 controls
+            else :
+                # movement
+                    # left (x axis)
+                if key[pygame.K_LEFT]:
+                    dx = -SPEED
+                    self.runing = True
+                    # rigth (x axis)
+                if key[pygame.K_RIGHT]:
+                    dx = +SPEED
+                    self.runing = True
+                    # jump up / down gravity (y axis)
+                if key[pygame.K_UP] and self.jump == False:
+                    self.velocity_y = -30
+                    self.jump = True
+                    # attacks
+                if key[pygame.K_KP1] or key[pygame.K_KP2]:
+                    
+                    self.attack(surface, target)
+                    # Now get the precise attack being used
+                    if key[pygame.K_KP1]:
+                        self.attack_type = 1
+                        self.attacking = True
+                    if key[pygame.K_KP2]:
+                        self.attack_type = 2
+                        self.attacking = True
 
         # apply gravity 
         self.velocity_y += GRAVITY
@@ -121,21 +149,21 @@ class Fighter():
     # Dealing with sprites updates
     def update_sprite(self):
         # Check the player action's
-        if self.health <= 0:
+        if self.hit == True:
+            self.update_action(6) # Hit
+        elif self.runing == True:
+            self.update_action(5) # runing
+        elif self.jump == True:
+            self.update_action(4) # jump
+        elif self.health <= 0:
             self.health = 0
             self.alive = False
             self.update_action(2) # death
-        elif self.hit == True:
-            self.update_action(6) # Hit
-        if self.attacking == True:
+        elif self.attacking == True:
             if self.attack_type == 1:
                 self.update_action(0) # attack 1
             elif self.attack_type == 2:
                 self.update_action(1) # attack 2
-        elif self.jump == True:
-            self.update_action(4) # jump
-        elif self.runing == True:
-            self.update_action(5) # runing
         else:
             self.update_action(3) # idle
         # create a cooldown value in order to change sprite each 100 ms
@@ -173,10 +201,10 @@ class Fighter():
             attack_rect = pygame.Rect(self.rect.centerx - (2 * self.rect.width * self.flip), self.rect.y, 2 * self.rect.width, self.rect.height)
             # check for collision between attack and the other player
             if attack_rect.colliderect(target.rect):
-                print("ouchy Baby")
+                #print("ouchy Baby")
                 target.health -= 10
                 target.hit = True
-                print(target.health)
+                #print(target.health)
             pygame.draw.rect(surface, (255, 50, 0), attack_rect)
             self.attacking = False
 
@@ -189,7 +217,7 @@ class Fighter():
             self.frame_index = 0
             self.update_sprite_time = pygame.time.get_ticks()
 
-    # Draw figther as rectangle(old), now draw the figther and check if he is facing the rigth side
+    # Draw figther as rectangle(OLD), NOW draw the figther and check if he is facing the rigth side
     def drawFigther(self, surface):
         img = pygame.transform.flip(self.image, self.flip, False)
         # pygame.draw.rect(surface, (255, 0, 250), self.rect)
