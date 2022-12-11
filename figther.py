@@ -3,7 +3,7 @@ import pygame
 
 class Fighter():
     # Constructor
-    def __init__(self, player, x, y, flip, data, sprite_sheet, sprite_steps):
+    def __init__(self, player, x, y, flip, data, sprite_sheet, sprite_steps, attack_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect):
         self.player = player
         self.size = data[0]
         self.image_scale = data[1]
@@ -16,13 +16,17 @@ class Fighter():
         self.update_sprite_time = pygame.time.get_ticks() # give to a Figther() instance a time stamp at the creation
         self.rect = pygame.Rect((x, y, 50, 150))
         self.velocity_y = 0
+        self.walk_soundEffect = walk_soundEffect
         self.runing = False
+        self.jump_soundEffect = jump_soundEffect
         self.jump = False
+        self.attack_soundEffect = attack_soundEffect
         self.attacking = False
         self.attack_type = 0
         self.cooldown_attack = 0
+        self.hit_soundEffect = hit_soundEffect
         self.hit = False
-        self.health = 10
+        self.health = 100
         self.alive = True
         
 
@@ -45,6 +49,7 @@ class Fighter():
         
     # Movement handler
     def move(self, screen_width, screen_height, floor_height, surface, target, round_finished):
+    #def move(self, screen_width, screen_height, floor_height, target, round_finished):    
         SPEED = 10
         GRAVITY = 2
         dx = 0
@@ -64,19 +69,23 @@ class Fighter():
                     # left (x axis)
                 if key[pygame.K_q]:
                     dx = -SPEED
+                    self.walk_soundEffect.play()
                     self.runing = True
                     # rigth (x axis)
                 if key[pygame.K_d]:
                     dx = +SPEED
+                    self.walk_soundEffect.play()
                     self.runing = True
                     # jump up / down gravity (y axis)
                 if key[pygame.K_z] and self.jump == False:
                     self.velocity_y = -30
+                    self.jump_soundEffect.play()
                     self.jump = True
                     # attacks
                 if key[pygame.K_v] or key[pygame.K_b]:
                     
-                    self.attack(surface, target)
+                    #self.attack(surface, target)
+                    self.attack(target)
                     # Now get the precise attack being used
                     if key[pygame.K_v]:
                         self.attack_type = 1
@@ -90,19 +99,23 @@ class Fighter():
                     # left (x axis)
                 if key[pygame.K_LEFT]:
                     dx = -SPEED
+                    self.walk_soundEffect.play()
                     self.runing = True
                     # rigth (x axis)
                 if key[pygame.K_RIGHT]:
                     dx = +SPEED
+                    self.walk_soundEffect.play()
                     self.runing = True
                     # jump up / down gravity (y axis)
                 if key[pygame.K_UP] and self.jump == False:
                     self.velocity_y = -30
+                    self.jump_soundEffect.play()
                     self.jump = True
                     # attacks
                 if key[pygame.K_KP1] or key[pygame.K_KP2]:
                     
-                    self.attack(surface, target)
+                    #self.attack(surface, target)
+                    self.attack(target)
                     # Now get the precise attack being used
                     if key[pygame.K_KP1]:
                         self.attack_type = 1
@@ -167,7 +180,7 @@ class Fighter():
         else:
             self.update_action(3) # idle
         # create a cooldown value in order to change sprite each 100 ms
-        animation_cooldown = 100
+        animation_cooldown = 60
         # to 'animate' the Figther we gonna need to go thru the self.frame_index, doing so will change the self.image for each new index reached
         self.image = self.animation_list[self.action][self.frame_index]
         # if statement to check if enough time has passed since last update
@@ -183,30 +196,35 @@ class Fighter():
             # check if an attack was (fully) executed
             if self.action == 0 or self.action == 1:
                 self.attacking = False # avoid the infinit attack
-                self.cooldown_attack = 20
+                self.cooldown_attack = 5
             # check if hit was taken
             if self.action == 6:
                 self.hit = False
                 # if the opponent was in a middle of an attack ==> the parry (attack stop)
                 self.attacking = False
-                self.cooldown_attack = 20
+                self.cooldown_attack = 5
 
     # Attack Method
-    def attack(self, surface, target):
+    #def attack(self, surface, target):
+    def attack(self, target):
         if self.cooldown_attack == 0:
             self.attacking = True
+            self.attack_soundEffect.play()
             # ==> self.rect.centerx - (2 * self.rect.width * self.flip)
             # Help determine wich side should be attacked depending on self.flip
             # If True then draw the rectangle on the left side of the player
-            attack_rect = pygame.Rect(self.rect.centerx - (2 * self.rect.width * self.flip), self.rect.y, 2 * self.rect.width, self.rect.height)
+            attack_rect = pygame.Rect(self.rect.centerx - (3.5 * self.rect.width * self.flip), self.rect.y, 3.5 * self.rect.width, self.rect.height)
             # check for collision between attack and the other player
             if attack_rect.colliderect(target.rect):
                 #print("ouchy Baby")
                 target.health -= 10
+                self.hit_soundEffect.play()
                 target.hit = True
+                
                 #print(target.health)
-            pygame.draw.rect(surface, (255, 50, 0), attack_rect)
-            self.attacking = False
+            # Draw a rectangle representing the attack zone (may be helpfull if we want to expand or reduce this area) :
+            #pygame.draw.rect(surface, (255, 50, 0), attack_rect)
+            #self.attacking = False
 
     # Handle the out of range animation behaviour
     def update_action(self, new_action):

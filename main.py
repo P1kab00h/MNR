@@ -1,8 +1,10 @@
 import pygame
+from pygame import mixer # will handle sound effect & music
 from figther import Fighter
 
 
 # Initialization
+mixer.init()
 pygame.init()
 
 # Game window variable
@@ -45,6 +47,25 @@ samuraiMack_size = 200
 samuraiMack_scale = 2
 samuraiMack_offset = [85, 47]
 samuraiMack_data = [samuraiMack_size, samuraiMack_scale, samuraiMack_offset]
+
+# Load and play sound effects and musics
+pygame.mixer.music.load("assets/sounds/currentUsed/DavidKBD-HairAndKnucklesPack-05-ANewAwakening.ogg")
+pygame.mixer.music.set_volume(0.25) # handle the music volume
+pygame.mixer.music.play(-1, 0.0, 5000) # allow to loop thrue the music (repeat -1, start at 0.0, and some fading)
+
+sword_soundEffect = pygame.mixer.Sound("assets/sounds/currentUsed/RetroSwooosh16.wav")
+sword_soundEffect.set_volume(1.1)
+
+hit_soundEffect = pygame.mixer.Sound("assets/sounds/currentUsed/RetroImpactHurt.wav")
+
+# volume to 0, searching for the good sound
+jump_soundEffect = pygame.mixer.Sound("assets/sounds/currentUsed/RetroJumpStereoUPSimple05.wav")
+#jump_soundEffect.set_volume(0)
+
+# volume to 0, seraching for a good sound
+walk_soundEffect = pygame.mixer.Sound("assets/sounds/currentUsed/walkMedium.wav")
+#walk_soundEffect.set_volume(0)
+
 
 
 # Load image BackGround to the size of screen: Surface
@@ -105,10 +126,10 @@ def drw_life_bar(health, x, y):
 
 
 # Instances of Figther()
-figther_1 = Fighter(1, 200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
+figther_1 = Fighter(1, 200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps, sword_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect)
 
-# figther_2 = Fighter(500, bgd_floor, True, kenji_data, kenji_full_sprite, kenji_full_sprites_steps)
-figther_2 = Fighter(2, 800, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
+# figther_2 = Fighter(500, bgd_floor, True, kenji_data, kenji_full_sprite, kenji_full_sprites_steps, sword_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect)
+figther_2 = Fighter(2, 800, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps, sword_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect)
 
 # Game loop
 run = True
@@ -161,9 +182,9 @@ while run:
             round_finished = False
             start_countdown = 3
             # Reset instances of Figther()
-            figther_1 = Fighter(1, 200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
-            # figther_2 = Fighter(500, bgd_floor, True, kenji_data, kenji_full_sprite, kenji_full_sprites_steps)
-            figther_2 = Fighter(2, 800, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps)
+            figther_1 = Fighter(1, 200, bgd_floor, False, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps, sword_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect)
+            # figther_2 = Fighter(500, bgd_floor, True, kenji_data, kenji_full_sprite, kenji_full_sprites_steps, sword_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect)
+            figther_2 = Fighter(2, 800, bgd_floor, True, samuraiMack_data, samuraiMack_full_sprite, samuraiMack_full_sprites_steps, sword_soundEffect, hit_soundEffect, jump_soundEffect, walk_soundEffect)
     
     
     # Add Title
